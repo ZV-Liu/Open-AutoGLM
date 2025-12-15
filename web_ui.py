@@ -423,214 +423,347 @@ def stop_current_task(session_id):
 
 
 # ============================================================================
+# Internationalization (i18n)
+# ============================================================================
+
+I18N = {
+    "en": {
+        "title": "# 🤖 Phone Agent\n\nAI-powered phone automation assistant - Control your Android device with natural language",
+        "device_management": "## 📱 Device Management",
+        "device_management_desc": "View and manage connected Android devices",
+        "wifi_connection": "**WiFi Wireless Connection**",
+        "device_ip_label": "Device IP Address",
+        "device_ip_placeholder": "e.g., 192.168.1.100:5555",
+        "wifi_connect_btn": "📡 WiFi Connect",
+        "select_device": "Select Device",
+        "refresh_devices": "🔄 Refresh Devices",
+        "list_devices": "📋 List Devices",
+        "device_output_init": "Click the button above to view device information or connect devices",
+        "system_check": "## 🔍 System Check",
+        "system_check_desc": "Click the button below to check if the system environment meets the requirements",
+        "run_check_btn": "▶️ Run System Check",
+        "check_output_init": "Click the button above to start checking",
+        "conversation_control": "## 💬 Conversation Control",
+        "model_api_url": "Model API URL",
+        "model_name": "Model Name",
+        "api_key": "API Key",
+        "max_steps": "Max Steps",
+        "task_input": "📝 Enter Task",
+        "task_placeholder": "e.g., Open WeChat and send a message 'Hello' to John",
+        "execute_task": "🚀 Execute Task",
+        "stop_task": "⏹️ Stop Task",
+        "new_conversation": "➕ New Conversation",
+        "execution_output": "📤 Execution Output",
+        "output_init": "Waiting for task input...",
+        "device_screenshot": "📱 Device Screenshot",
+        "auto_refresh": "Auto Refresh (0.5s)",
+        "help": "## ❓ Help",
+        "user_guide": "📖 User Guide",
+    },
+    "cn": {
+        "title": "# 🤖 Phone Agent 手机助手\n\n基于AI的智能手机自动化助手 - 通过自然语言控制您的Android设备",
+        "device_management": "## 📱 设备管理",
+        "device_management_desc": "查看和管理已连接的Android设备",
+        "wifi_connection": "**WiFi无线连接**",
+        "device_ip_label": "设备IP地址",
+        "device_ip_placeholder": "例如: 192.168.1.100:5555",
+        "wifi_connect_btn": "📡 WiFi连接",
+        "select_device": "选择设备",
+        "refresh_devices": "🔄 刷新设备",
+        "list_devices": "📋 列出设备",
+        "device_output_init": "点击上方按钮查看设备信息或连接设备",
+        "system_check": "## 🔍 系统检查",
+        "system_check_desc": "点击下方按钮检查系统环境是否满足运行要求",
+        "run_check_btn": "▶️ 运行系统检查",
+        "check_output_init": "点击上方按钮开始检查",
+        "conversation_control": "## 💬 对话控制",
+        "model_api_url": "模型API地址",
+        "model_name": "模型名称",
+        "api_key": "API Key",
+        "max_steps": "最大步数",
+        "task_input": "📝 输入任务",
+        "task_placeholder": "例如: 打开微信,给张三发送一条消息'你好'",
+        "execute_task": "🚀 执行任务",
+        "stop_task": "⏹️ 终止任务",
+        "new_conversation": "➕ 新对话",
+        "execution_output": "📤 执行输出",
+        "output_init": "等待任务输入...",
+        "device_screenshot": "📱 设备截图",
+        "auto_refresh": "自动刷新(0.5s)",
+        "help": "## ❓ 帮助",
+        "user_guide": "📖 使用指南",
+    }
+}
+
+# ============================================================================
 # Gradio UI
 # ============================================================================
 
 def create_ui():
     """Create the Gradio interface."""
 
-    with gr.Blocks(title="Phone Agent 手机助手", theme=gr.themes.Soft()) as app:
-        gr.Markdown("""
-        # 🤖 Phone Agent 手机助手
+    # Default language from environment variable
+    default_lang = os.getenv("PHONE_AGENT_LANG", "en")
 
-        基于AI的智能手机自动化助手 - 通过自然语言控制您的Android设备
-        """)
+    with gr.Blocks(title="Phone Agent", theme=gr.themes.Soft()) as app:
+        # Language selector at the top right
+        with gr.Row():
+            with gr.Column(scale=4):
+                title_md = gr.Markdown(I18N[default_lang]["title"])
+            with gr.Column(scale=1):
+                lang = gr.Radio(
+                    choices=[("English", "en"), ("简体中文", "cn")],
+                    value=default_lang,
+                    label="Language / 语言",
+                    info="Agent language"
+                )
 
         # Session state
         session_state = gr.State(None)
 
-        with gr.Tabs():
+        # ================================================================
+        # Section 1: Device Management
+        # ================================================================
+        device_mgmt_title = gr.Markdown(I18N[default_lang]["device_management"])
+        device_mgmt_desc = gr.Markdown(I18N[default_lang]["device_management_desc"])
 
-            # ================================================================
-            # Tab 1: Device Management
-            # ================================================================
-            with gr.Tab("📱 设备管理"):
-                gr.Markdown("""
-                ### 设备连接管理
-                查看和管理已连接的Android设备
-                """)
+        wifi_connection_md = gr.Markdown(I18N[default_lang]["wifi_connection"])
 
+        with gr.Row():
+            wifi_ip = gr.Textbox(
+                label=I18N[default_lang]["device_ip_label"],
+                placeholder=I18N[default_lang]["device_ip_placeholder"],
+            )
+            wifi_connect_btn = gr.Button(I18N[default_lang]["wifi_connect_btn"], size="lg", variant="primary")
+
+        with gr.Row():
+            device_dropdown = gr.Dropdown(
+                label=I18N[default_lang]["select_device"],
+                choices=[],
+                value=None,
+                interactive=True,
+                scale=2
+            )
+            refresh_btn = gr.Button(I18N[default_lang]["refresh_devices"], size="lg")
+            list_devices_btn = gr.Button(I18N[default_lang]["list_devices"], size="lg")
+
+        device_output = gr.Markdown(I18N[default_lang]["device_output_init"])
+
+        gr.Markdown("---")  # Divider
+
+        # ================================================================
+        # Section 2: System Check
+        # ================================================================
+        system_check_title = gr.Markdown(I18N[default_lang]["system_check"])
+        system_check_desc = gr.Markdown(I18N[default_lang]["system_check_desc"])
+
+        check_btn = gr.Button(I18N[default_lang]["run_check_btn"], variant="primary", size="lg")
+        check_output = gr.Markdown(I18N[default_lang]["check_output_init"])
+
+        gr.Markdown("---")  # Divider
+
+        # ================================================================
+        # Section 3: Main Interface - Conversation Control
+        # ================================================================
+        conversation_title = gr.Markdown(I18N[default_lang]["conversation_control"])
+
+        with gr.Row():
+            with gr.Column(scale=2):
+                # Configuration Section
                 with gr.Row():
-                    list_devices_btn = gr.Button("📋 列出设备", size="lg")
-                    connect_ip = gr.Textbox(
-                        label="远程设备地址",
-                        placeholder="例如: 192.168.1.100:5555"
+                    base_url = gr.Textbox(
+                        label=I18N[default_lang]["model_api_url"],
+                        value=os.getenv("PHONE_AGENT_BASE_URL", "http://localhost:8000/v1"),
+                        placeholder="http://localhost:8000/v1"
                     )
-                    connect_btn = gr.Button("🔗 连接设备", size="lg")
+                    model_name = gr.Textbox(
+                        label=I18N[default_lang]["model_name"],
+                        value=os.getenv("PHONE_AGENT_MODEL", "autoglm-phone-9b"),
+                        placeholder="autoglm-phone-9b"
+                    )
 
-                device_output = gr.Markdown("点击上方按钮查看设备信息")
-            # ================================================================
-            # Tab 2: System Check
-            # ================================================================
-            with gr.Tab("🔍 系统检查"):
-                gr.Markdown("""
-                ### 环境配置检查
-                点击下方按钮检查系统环境是否满足运行要求
-                """)
-
-                check_btn = gr.Button("▶️ 运行系统检查", variant="primary", size="lg")
-                check_output = gr.Markdown("点击上方按钮开始检查")
-
-
-            # ================================================================
-            # Tab 3: Main Interface
-            # ================================================================
-            with gr.Tab("💬 对话控制"):
                 with gr.Row():
-                    with gr.Column(scale=2):
-                        # Configuration Section
-                        with gr.Accordion("⚙️ 配置", open=False):
-                            with gr.Row():
-                                base_url = gr.Textbox(
-                                    label="模型API地址",
-                                    value=os.getenv("PHONE_AGENT_BASE_URL", "http://localhost:8000/v1"),
-                                    placeholder="http://localhost:8000/v1"
-                                )
-                                model_name = gr.Textbox(
-                                    label="模型名称",
-                                    value=os.getenv("PHONE_AGENT_MODEL", "autoglm-phone-9b"),
-                                    placeholder="autoglm-phone-9b"
-                                )
+                    api_key = gr.Textbox(
+                        label=I18N[default_lang]["api_key"],
+                        value=os.getenv("PHONE_AGENT_API_KEY", "EMPTY"),
+                        placeholder="EMPTY",
+                        type="password"
+                    )
+                    max_steps = gr.Number(
+                        label=I18N[default_lang]["max_steps"],
+                        value=int(os.getenv("PHONE_AGENT_MAX_STEPS", "100")),
+                        precision=0
+                    )
 
-                            with gr.Row():
-                                api_key = gr.Textbox(
-                                    label="API Key",
-                                    value=os.getenv("PHONE_AGENT_API_KEY", "EMPTY"),
-                                    placeholder="EMPTY",
-                                    type="password"
-                                )
-                                max_steps = gr.Number(
-                                    label="最大步数",
-                                    value=int(os.getenv("PHONE_AGENT_MAX_STEPS", "100")),
-                                    precision=0
-                                )
+                # Task Input
+                task_input = gr.Textbox(
+                    label=I18N[default_lang]["task_input"],
+                    placeholder=I18N[default_lang]["task_placeholder"],
+                    lines=3
+                )
 
-                            with gr.Row():
-                                device_dropdown = gr.Dropdown(
-                                    label="选择设备",
-                                    choices=[],
-                                    value=None,
-                                    interactive=True
-                                )
-                                refresh_btn = gr.Button("🔄 刷新设备", size="sm")
-                                lang = gr.Radio(
-                                    choices=[("中文", "cn"), ("English", "en")],
-                                    value="cn",
-                                    label="语言"
-                                )
+                with gr.Row():
+                    submit_btn = gr.Button(I18N[default_lang]["execute_task"], variant="primary", size="lg")
+                    stop_btn = gr.Button(I18N[default_lang]["stop_task"], variant="stop", size="lg")
+                    new_chat_btn = gr.Button(I18N[default_lang]["new_conversation"], size="lg")
 
-                        # Task Input
-                        task_input = gr.Textbox(
-                            label="📝 输入任务",
-                            placeholder="例如: 打开微信，给张三发送一条消息'你好'",
-                            lines=3
-                        )
+                # Output Display
+                output_display = gr.Markdown(
+                    label=I18N[default_lang]["execution_output"],
+                    value=I18N[default_lang]["output_init"]
+                )
 
-                        with gr.Row():
-                            submit_btn = gr.Button("🚀 执行任务", variant="primary", size="lg")
-                            stop_btn = gr.Button("⏹️ 终止任务", variant="stop", size="lg")
-                            new_chat_btn = gr.Button("➕ 新对话", size="lg")
+            with gr.Column(scale=1):
+                # Screenshot Display
+                screenshot_display = gr.Image(
+                    label=I18N[default_lang]["device_screenshot"],
+                    type="filepath",
+                    height=800,
+                    width=360
 
-                        # Output Display
-                        output_display = gr.Markdown(
-                            label="📤 执行输出",
-                            value="等待任务输入..."
-                        )
+                )
 
-                    with gr.Column(scale=1):
-                        # Screenshot Display
-                        screenshot_display = gr.Image(
-                            label="📱 设备截图",
-                            type="filepath",
-                            height=800,
-                            width=360
-                    
-                        )
+                auto_refresh_checkbox = gr.Checkbox(
+                    label=I18N[default_lang]["auto_refresh"],
+                    value=False
+                )
 
-                        auto_refresh_checkbox = gr.Checkbox(
-                            label="自动刷新(0.5s)",
-                            value=False
-                        )
+                # Auto-refresh timer
+                screenshot_timer = gr.Timer(value=0.5, active=False)
 
-                        # Auto-refresh timer
-                        screenshot_timer = gr.Timer(value=0.5, active=False)
+        gr.Markdown("---")  # Divider
 
-            # ================================================================
-            # Tab 4: Help
-            # ================================================================
-            with gr.Tab("❓ 帮助"):
-                gr.Markdown("""
-                ## 📖 使用指南
+        # ================================================================
+        # Section 4: Help
+        # ================================================================
+        help_title = gr.Markdown(I18N[default_lang]["help"])
 
-                ### 快速开始
+        with gr.Accordion(I18N[default_lang]["user_guide"], open=False):
+            gr.Markdown("""
+            ### 快速开始
 
-                1. **检查环境**: 前往"系统检查"标签页，运行系统检查确保环境配置正确
-                2. **配置设置**: 在"配置"区域设置模型API地址和API Key
-                3. **选择设备**: 点击"刷新设备"按钮，从下拉列表中选择目标设备
-                4. **输入任务**: 在任务输入框中用自然语言描述您的需求
-                5. **执行任务**: 点击"执行任务"按钮，系统会自动控制手机完成任务
+            1. **检查环境**: 在"系统检查"部分，运行系统检查确保环境配置正确
+            2. **配置设置**: 在"配置"区域设置模型API地址和API Key
+            3. **选择设备**: 点击"刷新设备"按钮，从下拉列表中选择目标设备
+            4. **输入任务**: 在任务输入框中用自然语言描述您的需求
+            5. **执行任务**: 点击"执行任务"按钮，系统会自动控制手机完成任务
 
-                ### 功能说明
+            ### 功能说明
 
-                #### 💬 对话控制
-                - **任务执行**: 支持流式输出，实时显示AI的思考过程和执行动作
-                - **截图显示**: 右侧实时显示设备当前屏幕状态
-                - **新对话**: 清空当前上下文，开始全新的任务会话
+            #### 💬 对话控制
+            - **任务执行**: 支持流式输出，实时显示AI的思考过程和执行动作
+            - **截图显示**: 右侧实时显示设备当前屏幕状态
+            - **新对话**: 清空当前上下文，开始全新的任务会话
 
-                #### 🔍 系统检查
-                - 检查ADB工具安装状态
-                - 检查设备连接状态
-                - 检查ADB Keyboard安装状态
-                - 检查模型API连接状态
+            #### 🔍 系统检查
+            - 检查ADB工具安装状态
+            - 检查设备连接状态
+            - 检查ADB Keyboard安装状态
+            - 检查模型API连接状态
 
-                #### 📱 设备管理
-                - 查看所有已连接设备
-                - 支持USB和WiFi连接
-                - 远程设备连接功能
+            #### 📱 设备管理
+            - 查看所有已连接设备
+            - 支持USB和WiFi连接
+            - 远程设备连接功能
 
-                ### 任务示例
+            ### 任务示例
 
-                ```
-                # 消息发送
-                打开微信，给张三发送消息"晚上一起吃饭吗?"
+            ```
+            # 消息发送
+            打开微信，给张三发送消息"晚上一起吃饭吗?"
 
-                # 应用操作
-                打开抖音，搜索"美食教程"，点赞第一个视频
+            # 应用操作
+            打开抖音，搜索"美食教程"，点赞第一个视频
 
-                # 购物任务
-                打开淘宝，搜索"机械键盘"，按价格从低到高排序，加购第一个商品
+            # 购物任务
+            打开淘宝，搜索"机械键盘"，按价格从低到高排序，加购第一个商品
 
-                # 信息查询
-                打开小红书，搜索"成都旅游攻略"，总结前5篇笔记的内容
-                ```
+            # 信息查询
+            打开小红书，搜索"成都旅游攻略"，总结前5篇笔记的内容
+            ```
 
-                ### 注意事项
+            ### 注意事项
 
-                - 首次使用请确保已安装ADB Keyboard并在设备设置中启用
-                - 执行任务前请确保设备已解锁
-                - 某些敏感操作(如支付)可能需要人工确认
-                - 建议在WiFi环境下使用以获得更好的响应速度
+            - 首次使用请确保已安装ADB Keyboard并在设备设置中启用
+            - 执行任务前请确保设备已解锁
+            - 某些敏感操作(如支付)可能需要人工确认
+            - 建议在WiFi环境下使用以获得更好的响应速度
 
-                ### 常见问题
+            ### 常见问题
 
-                **Q: 无法检测到设备?**
-                A: 确保已启用USB调试，并在设备上授权计算机的调试请求
+            **Q: 无法检测到设备?**
+            A: 确保已启用USB调试，并在设备上授权计算机的调试请求
 
-                **Q: 任务执行失败?**
-                A: 检查网络连接，确认模型API服务正常运行
+            **Q: 任务执行失败?**
+            A: 检查网络连接，确认模型API服务正常运行
 
-                **Q: 输入文本没有反应?**
-                A: 确保已安装并启用ADB Keyboard
+            **Q: 输入文本没有反应?**
+            A: 确保已安装并启用ADB Keyboard
 
-                ### 技术支持
+            ### 技术支持
 
-                - GitHub: [Open-AutoGLM](https://github.com/zai-org/Open-AutoGLM)
-                - 文档: 查看项目README获取更多信息
-                """)
+            - GitHub: [Open-AutoGLM](https://github.com/zai-org/Open-AutoGLM)
+            - 文档: 查看项目README获取更多信息
+            """)
 
         # ================================================================
         # Event Handlers
         # ================================================================
+
+        # Language change handler
+        def update_language(selected_lang):
+            """Update all UI text based on selected language."""
+            i18n = I18N.get(selected_lang, I18N["en"])
+            return [
+                # Title
+                i18n["title"],
+                # Device Management
+                i18n["device_management"],
+                i18n["device_management_desc"],
+                i18n["wifi_connection"],
+                gr.Textbox(label=i18n["device_ip_label"], placeholder=i18n["device_ip_placeholder"]),
+                gr.Button(value=i18n["wifi_connect_btn"]),
+                gr.Dropdown(label=i18n["select_device"]),
+                gr.Button(value=i18n["refresh_devices"]),
+                gr.Button(value=i18n["list_devices"]),
+                # System Check
+                i18n["system_check"],
+                i18n["system_check_desc"],
+                gr.Button(value=i18n["run_check_btn"]),
+                # Conversation Control
+                i18n["conversation_control"],
+                gr.Textbox(label=i18n["model_api_url"]),
+                gr.Textbox(label=i18n["model_name"]),
+                gr.Textbox(label=i18n["api_key"]),
+                gr.Number(label=i18n["max_steps"]),
+                gr.Textbox(label=i18n["task_input"], placeholder=i18n["task_placeholder"]),
+                gr.Button(value=i18n["execute_task"]),
+                gr.Button(value=i18n["stop_task"]),
+                gr.Button(value=i18n["new_conversation"]),
+                gr.Image(label=i18n["device_screenshot"]),
+                gr.Checkbox(label=i18n["auto_refresh"]),
+                # Help
+                i18n["help"],
+            ]
+
+        # Language selector change event
+        lang.change(
+            fn=update_language,
+            inputs=[lang],
+            outputs=[
+                title_md,
+                device_mgmt_title, device_mgmt_desc,
+                wifi_connection_md,
+                wifi_ip, wifi_connect_btn,
+                device_dropdown, refresh_btn, list_devices_btn,
+                system_check_title, system_check_desc, check_btn,
+                conversation_title,
+                base_url, model_name, api_key, max_steps,
+                task_input, submit_btn, stop_btn, new_chat_btn,
+                screenshot_display, auto_refresh_checkbox,
+                help_title,
+            ]
+        )
 
         # Refresh devices
         refresh_btn.click(
@@ -693,25 +826,25 @@ def create_ui():
             outputs=[device_output]
         )
 
-        # Connect device
-        def connect_device(address):
-            if not address:
-                return "❌ 请输入设备地址"
+        # WiFi Connect device
+        def wifi_connect_device(ip_address):
+            if not ip_address:
+                return "❌ 请输入设备IP地址"
 
             try:
                 from phone_agent.adb import ADBConnection
                 conn = ADBConnection()
-                success, message = conn.connect(address)
+                success, message = conn.connect(ip_address)
                 if success:
-                    return f"✅ {message}"
+                    return f"✅ WiFi连接成功: {message}\n\n提示: 连接成功后请点击'刷新设备'按钮更新设备列表"
                 else:
-                    return f"❌ {message}"
+                    return f"❌ WiFi连接失败: {message}"
             except Exception as e:
-                return f"❌ 连接失败: {str(e)}"
+                return f"❌ WiFi连接失败: {str(e)}"
 
-        connect_btn.click(
-            fn=connect_device,
-            inputs=[connect_ip],
+        wifi_connect_btn.click(
+            fn=wifi_connect_device,
+            inputs=[wifi_ip],
             outputs=[device_output]
         )
 
